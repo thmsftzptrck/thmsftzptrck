@@ -1,8 +1,5 @@
 - 👋 Hi, I’m @thmsftzptrck
-- 👀 I’m interested in everything all the time
-- 🌱 I’m currently learning Python and JavaScript
-- 💞️ I’m looking to collaborate on anything
-- 📫 How to reach me: tweets
+- 📫 How to reach me: I'm outside
 
 <!---
 thmsftzptrck/thmsftzptrck is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
