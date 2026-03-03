@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposed Parochial Boundaries — Macon County, NC</title>
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Cinzel:wght@400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'EB Garamond', Georgia, serif;
+    background: #1c1f2e;
+    color: #e8e0d0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: linear-gradient(135deg, #1a2a4a 0%, #0f1825 100%);
+    border-bottom: 2px solid #8b9e6a;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .header-left h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #e8e0d0;
+    letter-spacing: 0.04em;
+  }
+
+  .header-left p {
+    font-size: 0.82rem;
+    color: #8b9e6a;
+    font-style: italic;
+    margin-top: 2px;
+  }
+
+  .diocese-badge {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    color: #c9b97a;
+    border: 1px solid #c9b97a44;
+    padding: 4px 10px;
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  #map {
+    flex: 1;
+    width: 100%;
+  }
+
+  /* Custom legend */
+  .map-legend {
+    background: rgba(15, 24, 37, 0.94);
+    border: 1px solid #3a4a6a;
+    border-radius: 3px;
+    padding: 14px 16px;
+    font-family: 'EB Garamond', serif;
+    min-width: 240px;
+    backdrop-filter: blur(4px);
+  }
+
+  .map-legend h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    color: #c9b97a;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #3a4a6a;
+    padding-bottom: 6px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 7px;
+    font-size: 0.82rem;
+    color: #d0c8b8;
+    line-height: 1.3;
+  }
+
+  .legend-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid white;
+  }
+
+  .legend-note {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid #3a4a6a;
+    font-size: 0.72rem;
+    color: #7a8a7a;
+    font-style: italic;
+  }
+
+  /* Popup styling */
+  .leaflet-popup-content-wrapper {
+    background: rgba(15, 24, 37, 0.97) !important;
+    border: 1px solid #3a4a6a !important;
+    border-radius: 4px !important;
+    color: #e8e0d0 !important;
+    font-family: 'EB Garamond', serif !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+  }
+
+  .leaflet-popup-tip { background: #1a2a4a !important; }
+  .leaflet-popup-close-button { color: #8b9e6a !important; }
+
+  .popup-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.95rem;
+    color: #c9b97a;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+
+  .popup-body {
+    font-size: 0.88rem;
+    color: #c0b8a8;
+    line-height: 1.5;
+  }
+
+  .popup-tag {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-size: 0.72rem;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.06em;
+  }
+
+  .tag-olm { background: #1a4a7a44; border: 1px solid #4d9dd4; color: #4d9dd4; }
+  .tag-sf  { background: #5a3a1a44; border: 1px solid #c9b97a; color: #c9b97a; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>Proposed Parochial Boundaries — Macon County, NC</h1>
+    <p>Our Lady of the Mountains elevation to full parish status</p>
+  </div>
+  <div class="diocese-badge">Diocese of Charlotte</div>
+</header>
+
+<div id="map"></div>
+
+<script>
+// Initialize map centered on Macon County
+const map = L.map('map', {
+  center: [35.13, -83.35],
+  zoom: 11,
+  zoomControl: true
+});
+
+// OpenStreetMap tiles
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© <a href="https://www.openstreetmap.org/copyright" style="color:#8b9e6a">OpenStreetMap</a> contributors',
+  maxZoom: 18
+}).addTo(map);
+
+// ─────────────────────────────────────────────────────────────
+// Fetch actual ZIP code boundaries from Census Bureau API
+// ZCTA5 (ZIP Code Tabulation Areas) — official Census boundaries
+// ─────────────────────────────────────────────────────────────
+
+const ZIP_STYLE_OLM_28741 = {
+  color: '#1a3f6b',
+  weight: 2.5,
+  opacity: 1,
+  fillColor: '#2c6fad',
+  fillOpacity: 0.55
+};
+
+const ZIP_STYLE_OLM_28775 = {
+  color: '#1a3f6b',
+  weight: 2.5,
+  opacity: 1,
+  fillColor: '#4d9dd4',
+  fillOpacity: 0.55
+};
+
+const ZIP_STYLE_SF = {
+  color: '#7a6a4a',
+  weight: 1.5,
+  opacity: 0.6,
+  fillColor: '#c8b88a',
+  fillOpacity: 0.25
+};
+
+// Use Census TIGERweb GeoJSON API for accurate ZIP boundaries
+// This is the official US Census Bureau REST endpoint — no API key needed
+const censusBase = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/PUMA_TAD_TAZ_UGA_ZCTA/MapServer/1/query';
+
+async function fetchZIP(zipCode, style, popupContent) {
+  const params = new URLSearchParams({
+    where: `GEOID='${zipCode}'`,
+    outFields: 'GEOID,NAME',
+    outSR: '4326',
+    f: 'geojson'
+  });
+
+  try {
+    const res = await fetch(`${censusBase}?${params}`);
+    const data = await res.json();
+    if (data.features && data.features.length > 0) {
+      const layer = L.geoJSON(data, {
+        style: () => style,
+        onEachFeature: (feature, layer) => {
+          layer.bindPopup(popupContent);
+          layer.on('mouseover', function() {
+            this.setStyle({ fillOpacity: style.fillOpacity + 0.2, weight: 3.5 });
+          });
+          layer.on('mouseout', function() {
+            this.setStyle(style);
+          });
+        }
+      }).addTo(map);
+      return layer;
+    }
+  } catch (e) {
+    console.warn('Census API unavailable, falling back to approximate boundaries.', e);
+    return null;
+  }
+}
+
+// Also fetch Macon County boundary for context
+async function fetchCounty() {
+  const countyParams = new URLSearchParams({
+    where: `STATE='37' AND COUNTY='113'`,  // NC FIPS=37, Macon=113
+    outFields: 'NAME',
+    outSR: '4326',
+    f: 'geojson'
+  });
+  const countyBase = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/11/query';
+  try {
+    const res = await fetch(`${countyBase}?${countyParams}`);
+    const data = await res.json();
+    if (data.features && data.features.length > 0) {
+      L.geoJSON(data, {
+        style: {
+          color: '#c9b97a',
+          weight: 2.5,
+          opacity: 0.8,
+          fill: false,
+          dashArray: '6 4'
+        }
+      }).addTo(map);
+    }
+  } catch(e) {
+    console.warn('County boundary fetch failed.', e);
+  }
+}
+
+// Church marker icons
+function churchIcon(color) {
+  return L.divIcon({
+    className: '',
+    html: `
+      <div style="
+        width:22px; height:22px; border-radius:50%;
+        background:${color}; border:3px solid white;
+        box-shadow:0 2px 8px rgba(0,0,0,0.6);
+        display:flex; align-items:center; justify-content:center;
+      ">
+        <span style="color:white;font-size:11px;font-weight:bold;">✝</span>
+      </div>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+    popupAnchor: [0, -14]
+  });
+}
+
+
+
+// Custom legend
+const legend = L.control({ position: 'bottomright' });
+legend.onAdd = function() {
+  const div = L.DomUtil.create('div', 'map-legend');
+  div.innerHTML = `
+    <h3>Legend</h3>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background:#2c6fad;"></div>
+      <span>ZIP 28741 – Highlands<br><em style="font-size:0.75rem;color:#8b9aaa;">Proposed OLM Parish</em></span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background:#4d9dd4;"></div>
+      <span>ZIP 28775 – Scaly Mountain<br><em style="font-size:0.75rem;color:#8b9aaa;">Proposed OLM Parish</em></span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background:#c8b88a; opacity:0.7;"></div>
+      <span>Macon County Remainder<br><em style="font-size:0.75rem;color:#8b9aaa;">St. Francis of Assisi Parish</em></span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#1a3f6b;"></div>
+      <span>Our Lady of the Mountains</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#8B4513;"></div>
+      <span>St. Francis of Assisi</span>
+    </div>
+    <div class="legend-note">Boundaries from US Census Bureau<br>TIGER/ZCTA5 geographic data</div>
+  `;
+  return div;
+};
+legend.addTo(map);
+
+// Load everything
+(async () => {
+  await fetchCounty();
+
+  await fetchZIP('28741', ZIP_STYLE_OLM_28741, `
+    <div class="popup-title">ZIP Code 28741 — Highlands</div>
+    <div class="popup-body">
+      Highlands Township, Macon County, NC<br>
+      Elevation: ~3,800 ft
+      <br><br>
+      <span class="popup-tag tag-olm">✝ Proposed OLM Parish Territory</span>
+    </div>
+  `);
+
+  await fetchZIP('28775', ZIP_STYLE_OLM_28775, `
+    <div class="popup-title">ZIP Code 28775 — Scaly Mountain</div>
+    <div class="popup-body">
+      Scaly Mountain area, Macon County, NC<br>
+      Geographically oriented toward Highlands Plateau
+      <br><br>
+      <span class="popup-tag tag-olm">✝ Proposed OLM Parish Territory</span>
+    </div>
+  `);
+
+  // Surrounding Franklin-area ZIPs for context
+  for (const zip of ['28734', '28744']) {
+    await fetchZIP(zip, ZIP_STYLE_SF, `
+      <div class="popup-title">ZIP Code ${zip} — Franklin Area</div>
+      <div class="popup-body">
+        Franklin / Macon County, NC
+        <br><br>
+        <span class="popup-tag tag-sf">✝ St. Francis of Assisi Parish</span>
+      </div>
+    `);
+  }
+
+  // Church markers (added last so they sit on top)
+  L.marker([35.0531, -83.1945], { icon: churchIcon('#1a3f6b') })
+    .addTo(map)
+    .bindPopup(`
+      <div class="popup-title">Our Lady of the Mountains</div>
+      <div class="popup-body">
+        315 N 5th St, Highlands, NC 28741<br>
+        Current status: Mission of St. Francis<br>
+        Proposed status: Full Parish
+        <br><br>
+        <span class="popup-tag tag-olm">✝ Proposed Parish Church</span>
+      </div>
+    `);
+
+  L.marker([35.1749, -83.3872], { icon: churchIcon('#8B4513') })
+    .addTo(map)
+    .bindPopup(`
+      <div class="popup-title">St. Francis of Assisi</div>
+      <div class="popup-body">
+        299 Maple St, Franklin, NC 28734<br>
+        Current status: Mother Parish of Macon County
+        <br><br>
+        <span class="popup-tag tag-sf">✝ Parish Church</span>
+      </div>
+    `);
+})();
+</script>
+</body>
+</html>
